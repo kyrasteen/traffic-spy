@@ -20,13 +20,16 @@ module TrafficSpy
     get "/sources/:identifier" do |identifier|
       source = Source.find_by(identifier: identifier)
       if source
+        @identifier     = identifier
         @payloads       = source.payloads
-        @urls           = Url.all
-        @relative_paths = Payload.relative_url_paths
+        @urls           = @payloads.ranked_urls_hash
+        @relative_paths = @payloads.relative_url_paths
         @user_agents    = PayloadUserAgent.all
         @resolutions    = Resolution.all
         @response_times = Payload.response_times
         @identifier     = identifier
+        # @response_times = @payloads.response_times
+
         erb :app_details
       else
         erb :unregistered_user
@@ -54,11 +57,10 @@ module TrafficSpy
         @all_events = @source.payloads.map {|payload| payload.event }
         @event_name = event_name
         @event = @all_events.find {|event| event_name == event.name }
-        # require 'pry';binding.pry
         @event_count = @event.payloads.count
         @hours_breakdown = @event.hour_by_hour_breakdown
         @relative_paths = Payload.relative_url_paths
-
+        @identifier = identifier
         erb :event_details
       else
         erb :event_details_error
